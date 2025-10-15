@@ -5,7 +5,8 @@ import controllerTemplate from "./templates/controller.template.js";
 import serviceTemplate from "./templates/service.template.js";
 import validationsTemplate from "./templates/validation.template.js";
 
-const moduleName = process.argv[2];
+let moduleName = process.argv[2];
+let baseName = process.argv[3];
 if (!moduleName) {
     console.error(
         "❌ Please provide a module name. Example: npm run cModule Investor"
@@ -13,7 +14,7 @@ if (!moduleName) {
     process.exit(1);
 }
 
-const { baseDir, pascal, camel, lower } = getModulePaths(moduleName);
+const { baseDir, pascal, camel, lower } = getModulePaths(moduleName, baseName);
 
 if (!fs.existsSync(baseDir)) {
     fs.mkdirSync(baseDir, { recursive: true });
@@ -23,28 +24,30 @@ if (!fs.existsSync(baseDir)) {
 const files = [
     {
         name: `${camel}.route.ts`,
-        content: routeTemplate({ pascal, camel, lower }),
+        content: routeTemplate({ pascal, camel, lower, subdir: !!baseDir }),
     },
     {
         name: `${camel}.controller.ts`,
-        content: controllerTemplate({ pascal, camel }),
+        content: controllerTemplate({ pascal, camel, subdir: !!baseDir }),
     },
     {
         name: `${camel}.service.ts`,
-        content: serviceTemplate({ pascal, camel, lower }),
+        content: serviceTemplate({ pascal, camel, lower, subdir: !!baseDir }),
     },
-    //   {
-    //     name: `${camel}.constant.ts`,
-    //     content: constantsTemplate({ pascal, camel, lower }),
-    //   },
     {
         name: `${camel}.validation.ts`,
-        content: validationsTemplate({ pascal, camel, lower }),
+        content: validationsTemplate({
+            pascal,
+            camel,
+            lower,
+            subdir: !!baseDir,
+        }),
     },
 ];
 
 files.forEach(({ name, content }) => {
     const filePath = `${baseDir}/${name}`;
+
     if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, content, "utf8");
         console.log(`✅ Created: ${filePath}`);
