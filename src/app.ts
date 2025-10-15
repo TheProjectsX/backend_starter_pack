@@ -1,0 +1,51 @@
+import express, { Application, NextFunction, Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import path from "path";
+import router from "./app/routes";
+import GlobalErrorHandler from "./app/middlewares/globalErrorHandler";
+
+const app: Application = express();
+
+export const corsOptions = {
+    origin: ["http://localhost:3000", "http://localhost:3001"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+};
+
+// Middleware setup
+app.use(cors(corsOptions));
+app.use(cookieParser());
+app.use(express.json());
+
+// Route handler for the root endpoint
+app.get("/", (req: Request, res: Response) => {
+    res.send({
+        success: true,
+        message: "El Psy Congroo!",
+    });
+});
+
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads"))); // Serve static files from the "uploads" directory
+
+// Setup API routes
+app.use("/api/v1", router);
+
+// Error handling middleware
+app.use(GlobalErrorHandler);
+
+// 404 Not Found handler
+app.use((req: Request, res: Response, next: NextFunction) => {
+    res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "API NOT FOUND!",
+        error: {
+            path: req.originalUrl,
+            message: "Your requested path is not found!",
+        },
+    });
+});
+
+export default app;
