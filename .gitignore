@@ -4,10 +4,9 @@ dist
 .qodo
 .env
 uploads
-/prisma/prisma
-
-/prisma/prisma
 
 /prisma/prisma
 
 /generated/prisma
+
+/prisma/dbml
