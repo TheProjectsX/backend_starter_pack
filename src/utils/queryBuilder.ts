@@ -110,11 +110,20 @@ class QueryBuilder {
         return this;
     }
 
-    // **Include Related Models*/
-    include(includableFields: Record<string, boolean | object>) {
+    // Include Related Models
+    include(fields: Record<string, boolean | object>) {
         this.prismaQuery.include = {
             ...this.prismaQuery.include,
-            ...includableFields,
+            ...fields,
+        };
+        return this;
+    }
+
+    // Select needed fields
+    select(fields: Record<string, boolean | object>) {
+        this.prismaQuery.select = {
+            ...this.prismaQuery.select,
+            ...fields,
         };
         return this;
     }
