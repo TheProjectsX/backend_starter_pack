@@ -1,4 +1,41 @@
-import { GetResult, OperationPayload } from "@prisma/client/runtime/library";
+/**
+ * QueryBuilder - Version 2.0
+ *
+ * DESCRIPTION::
+ * Full Type Safety
+ * Uses Prisma Generated types to Show correct auto complete and types
+ * Returns the final Included, Selected, Omitted value
+ * Doesn't require any type input, only model and query
+ */
+
+import { Prisma } from "@prisma/client";
+import {
+    DefaultArgs,
+    GetPayloadResult,
+    GetResult,
+} from "@prisma/client/runtime/library";
+
+// Helper to check if a type is an enum
+type IsEnum<T> = T extends string | number
+    ? string extends T
+        ? false
+        : number extends T
+        ? false
+        : true
+    : false;
+
+type EnumKeys<T> = {
+    [K in keyof T]: IsEnum<T[K]> extends true ? K : never;
+}[keyof T];
+
+type ConvertPayload<Payload extends Record<any, any>[]> = {
+    name: "";
+    objects: {
+        settings: Prisma.$SettingsPayload<DefaultArgs>[];
+    };
+    scalars: GetPayloadResult<Payload[0], { [x: string]: () => unknown }>;
+    composites: {};
+};
 
 type CleanOptions<TInclude, TSelect, TOmit> = (TInclude extends undefined
     ? {}
@@ -7,8 +44,11 @@ type CleanOptions<TInclude, TSelect, TOmit> = (TInclude extends undefined
     (TOmit extends undefined ? {} : { omit: TOmit });
 
 class QueryBuilder<
-    TFindManyArgs = any,
-    TPayload extends OperationPayload = any,
+    Model extends { findMany: (...args: any) => any },
+    TFindManyArgs = Parameters<Model["findMany"]>[0],
+    TPayload extends Record<any, any>[] = Awaited<
+        ReturnType<Model["findMany"]>
+    >,
     TInclude = undefined,
     TSelect = undefined,
     TOmit = undefined
@@ -18,12 +58,10 @@ class QueryBuilder<
     private prismaQuery: Partial<TFindManyArgs> | any = {};
 
     /**
-     * @template TFindManyArgs - The Prisma FindManyArgs type for the model (e.g., Prisma.UserFindManyArgs)
-     * @template TPayload - The Prisma Payload type for the model (e.g., Prisma.$UserPayload)
      * @param model - The Prisma model client (e.g., prisma.user)
      * @param query - The raw query object
      */
-    constructor(model: any, query: Record<string, unknown>) {
+    constructor(model: Model, query: Record<string, unknown>) {
         this.model = model;
         this.query = query;
     }
@@ -49,11 +87,7 @@ class QueryBuilder<
      * Applies filter conditions for query fields.
      * Supports "null", "notnull", exact fields, and contains search.
      */
-    filter(
-        exactFields: TFindManyArgs extends { distinct?: infer T }
-            ? T
-            : string[] = [] as any
-    ) {
+    filter(exactFields: EnumKeys<TPayload[0]>[]) {
         const queryObj = { ...this.query };
         const excludeFields = [
             "searchTerm",
@@ -294,8 +328,8 @@ class QueryBuilder<
     >(
         fields: T
     ): [TSelect] extends [undefined]
-        ? QueryBuilder<TFindManyArgs, TPayload, T, TSelect, TOmit>
-        : "❌ Cannot use 'include' and 'select' together - Use one" {
+        ? QueryBuilder<Model, TFindManyArgs, TPayload, T, TSelect, TOmit>
+        : "Please either choose `select` or `include`" {
         this.prismaQuery.include = { ...this.prismaQuery.include, ...fields! };
         return this as any;
     }
@@ -311,9 +345,9 @@ class QueryBuilder<
         fields: T
     ): [TInclude] extends [undefined]
         ? [TOmit] extends [undefined]
-            ? QueryBuilder<TFindManyArgs, TPayload, TInclude, T, TOmit>
-            : "❌ Cannot use 'select' and 'omit' - Use one"
-        : "❌ Cannot use 'select' and 'include' - Use one" {
+            ? QueryBuilder<Model, TFindManyArgs, TPayload, TInclude, T, TOmit>
+            : "Please either choose `select` or `omit`"
+        : "Please either choose `select` or `include`" {
         this.prismaQuery.select = { ...this.prismaQuery.select, ...fields! };
         return this as any;
     }
@@ -328,8 +362,8 @@ class QueryBuilder<
     >(
         fields: T
     ): [TSelect] extends [undefined]
-        ? QueryBuilder<TFindManyArgs, TPayload, TInclude, TSelect, T>
-        : "❌ Cannot use 'omit' with 'select' - Use one" {
+        ? QueryBuilder<Model, TFindManyArgs, TPayload, TInclude, TSelect, T>
+        : "Please either choose `select` or `omit`" {
         this.prismaQuery.omit = { ...this.prismaQuery.omit, ...fields! };
         return this as any;
     }
@@ -342,7 +376,11 @@ class QueryBuilder<
             ? TFindManyArgs
             : Record<string, any> = {} as any
     ): Promise<
-        GetResult<TPayload, CleanOptions<TInclude, TSelect, TOmit>, "findMany">
+        GetResult<
+            ConvertPayload<TPayload>,
+            CleanOptions<TInclude, TSelect, TOmit>,
+            "findMany"
+        >
     > {
         return this.model.findMany({
             ...this.prismaQuery,
