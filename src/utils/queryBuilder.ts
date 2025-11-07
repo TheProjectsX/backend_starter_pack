@@ -28,6 +28,9 @@ type EnumKeys<T> = {
     [K in keyof T]: IsEnum<T[K]> extends true ? K : never;
 }[keyof T];
 
+// Trying to convert the Return payload to OperationPayload type from "@prisma/client/runtime/library"
+// Why? Cause we need OperationPayload to use to parse type from GetResult
+// We can definitely use Prisma.$ModelPayload , but it will require to pass the type as generic, which we are wanting to avoid!
 type ConvertPayload<Payload extends Record<any, any>[]> = {
     name: "";
     objects: {
@@ -67,19 +70,36 @@ class QueryBuilder<
     }
     /**
      * Adds OR search conditions for specified fields using query.searchTerm.
+     
+     * Supports nested fields: `["name", "clinic.name"]`
      */
     search(
-        fields: TFindManyArgs extends { distinct?: infer T } ? T : string[]
+        fields: TFindManyArgs extends { distinct?: infer T }
+            ? T & string
+            : string[]
     ) {
         const searchTerm = this.query.searchTerm as string;
-        if (searchTerm) {
-            this.prismaQuery.where = {
-                ...this.prismaQuery.where,
-                OR: (fields as string[]).map((field) => ({
-                    [field]: { contains: searchTerm, mode: "insensitive" },
-                })),
-            };
-        }
+        if (!searchTerm) return this;
+
+        this.prismaQuery.where = {
+            ...this.prismaQuery.where,
+            OR: (fields as string[]).map((field) => {
+                const parts = field.split("."); // split nested path
+                return parts.reduceRight<any>((acc, key, index) => {
+                    if (index === parts.length - 1) {
+                        // last part = the actual field
+                        return {
+                            [key]: {
+                                contains: searchTerm,
+                                mode: "insensitive",
+                            },
+                        };
+                    }
+                    return { [key]: acc }; // wrap previous level
+                }, {});
+            }),
+        };
+
         return this;
     }
 
@@ -87,7 +107,7 @@ class QueryBuilder<
      * Applies filter conditions for query fields.
      * Supports "null", "notnull", exact fields, and contains search.
      */
-    filter(exactFields: EnumKeys<TPayload[0]>[]) {
+    filter(exactFields: (EnumKeys<TPayload[0]> | (string & {}))[]) {
         const queryObj = { ...this.query };
         const excludeFields = [
             "searchTerm",
@@ -108,7 +128,17 @@ class QueryBuilder<
             } else if (value === "notnull") {
                 formattedFilters[field] = { not: null };
             } else if ((exactFields as string[]).includes(field)) {
-                formattedFilters[field] = { equals: value };
+                const parts = field.split(".");
+                const nestedFilter = parts.reduceRight<any>(
+                    (acc, key, index) => {
+                        if (index === parts.length - 1) {
+                            return { [key]: { equals: value } };
+                        }
+                        return { [key]: acc };
+                    },
+                    {}
+                );
+                Object.assign(formattedFilters, nestedFilter);
             } else {
                 formattedFilters[field] = {
                     contains: value,
@@ -391,7 +421,12 @@ class QueryBuilder<
     /**
      * Returns total count, current page, limit, and total pages.
      */
-    async countTotal() {
+    async countTotal(): Promise<{
+        page: number;
+        limit: number;
+        total: any;
+        totalPage: number;
+    }> {
         const total = await this.model.count({ where: this.prismaQuery.where });
         const page = Number(this.query.page) || 1;
         const limit = Number(this.query.limit) || 10;
