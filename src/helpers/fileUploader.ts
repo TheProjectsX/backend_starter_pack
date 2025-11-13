@@ -9,37 +9,37 @@ const uploadDir = path.join(process.cwd(), "uploads");
 
 // Ensure the directory exists
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+    fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 // local file storage
 export const createStorage = (folder?: string) => {
-  const uploadFolder = folder
-    ? path.join(process.cwd(), "uploads", folder)
-    : path.join(process.cwd(), "uploads");
+    const uploadFolder = folder
+        ? path.join(process.cwd(), "uploads", folder)
+        : path.join(process.cwd(), "uploads");
 
-  return multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, uploadFolder);
-    },
-    filename: function (req, file, cb) {
-      const uniqueSuffix = `${uuidv4()}-${Date.now()}`;
-      const fileExtension = path.extname(file.originalname);
+    return multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, uploadFolder);
+        },
+        filename: function (req, file, cb) {
+            const uniqueSuffix = `${uuidv4()}-${Date.now()}`;
+            const fileExtension = path.extname(file.originalname);
 
-      const slugifiedName = slugify(
-        path.basename(file.originalname, fileExtension)
-      );
+            const slugifiedName = slugify(
+                path.basename(file.originalname, fileExtension),
+            );
 
-      const fileName = `${slugifiedName}-${uniqueSuffix}${fileExtension}`;
+            const fileName = `${slugifiedName}-${uniqueSuffix}${fileExtension}`;
 
-      cb(null, fileName);
-    },
-  });
+            cb(null, fileName);
+        },
+    });
 };
 
 export const upload = multer({
-  storage: createStorage(),
-  fileFilter: fileFilter,
+    storage: createStorage(),
+    fileFilter: fileFilter,
 });
 
 // const example = upload.fields([{ name: "galleryImage", maxCount: 5 }]);

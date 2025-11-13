@@ -26,7 +26,7 @@ const register = async (req: Request) => {
     if (isUserExists) {
         throw new ApiError(
             StatusCodes.CONFLICT,
-            "user already exist with this email"
+            "user already exist with this email",
         );
     }
 
@@ -54,7 +54,7 @@ const register = async (req: Request) => {
         await emailSender(
             "Email verification link for Investor.io",
             user.email,
-            html
+            html,
         );
 
         const { password, ...result } = user;
@@ -87,7 +87,7 @@ const loginUserWithEmail = async (payload: {
 
     const isCorrectPassword = await comparePassword(
         payload.password,
-        userData.password
+        userData.password,
     );
 
     if (!isCorrectPassword) {
@@ -97,7 +97,7 @@ const loginUserWithEmail = async (payload: {
     if (userData.status === "INACTIVE")
         throw new ApiError(
             StatusCodes.FORBIDDEN,
-            "Your account has been Blocked"
+            "Your account has been Blocked",
         );
 
     if (!userData?.isEmailVerified) {
@@ -115,7 +115,7 @@ const loginUserWithEmail = async (payload: {
                 {
                     algorithm: "HS256",
                     expiresIn: "30m",
-                }
+                },
             );
             const verifyLink = `${config.backend_url}/api/v1/auth/verify-email?token=${token}`;
 
@@ -124,7 +124,7 @@ const loginUserWithEmail = async (payload: {
             await emailSender(
                 "Email verification link from Investor.io",
                 userData.email,
-                html
+                html,
             );
         } catch (error) {
             console.log(error);
@@ -139,7 +139,7 @@ const loginUserWithEmail = async (payload: {
         },
         config.jwt.jwt_secret as Secret,
         // config.jwt.expires_in as string
-        config.jwt.expires_in as string
+        config.jwt.expires_in as string,
     );
 
     const refreshToken = jwtHelpers.generateToken(
@@ -150,7 +150,7 @@ const loginUserWithEmail = async (payload: {
         },
         config.jwt.refresh_token_secret as Secret,
         // config.jwt.refresh_token_expires_in as string
-        config.jwt.refresh_token_expires_in as string
+        config.jwt.refresh_token_expires_in as string,
     );
 
     const message = userData.isEmailVerified
@@ -196,7 +196,7 @@ const enterOtp = async (payload: {
             role: userData.role,
         },
         config.jwt.jwt_secret as Secret,
-        config.jwt.expires_in as string
+        config.jwt.expires_in as string,
     );
 
     refreshToken = jwtHelpers.generateToken(
@@ -206,7 +206,7 @@ const enterOtp = async (payload: {
             role: userData.role,
         },
         config.jwt.refresh_token_secret as Secret,
-        config.jwt.refresh_token_expires_in as string
+        config.jwt.refresh_token_expires_in as string,
     );
 
     await prisma.user.update({
@@ -320,7 +320,7 @@ const enterOtp = async (payload: {
 const getMyProfile = async (userToken: string) => {
     const decodedToken = jwtHelpers.verifyToken(
         userToken,
-        config.jwt.jwt_secret!
+        config.jwt.jwt_secret!,
     );
 
     const userData = await prisma.$transaction(async (TransactionClient) => {
@@ -357,7 +357,7 @@ const changePassword = async (
     payload: {
         oldPassword: string;
         newPassword: string;
-    }
+    },
 ) => {
     if (!payload.oldPassword || !payload.newPassword) {
         throw new ApiError(StatusCodes.BAD_REQUEST, "Invalid Body Provided");
@@ -370,13 +370,13 @@ const changePassword = async (
     if (!userInfo || !userInfo?.password) {
         throw new ApiError(
             StatusCodes.UNAUTHORIZED,
-            "Unauthenticated Request!"
+            "Unauthenticated Request!",
         );
     }
 
     const isPasswordValid = await comparePassword(
         payload.oldPassword,
-        userInfo?.password
+        userInfo?.password,
     );
 
     if (!isPasswordValid) {
@@ -410,7 +410,7 @@ const forgotPassword = async (payload: { email: string }) => {
     const resetPassToken = jwtHelpers.generateToken(
         { email: userData.email, role: userData.role },
         config.jwt.reset_pass_secret as Secret,
-        config.jwt.reset_pass_token_expires_in as string
+        config.jwt.reset_pass_token_expires_in as string,
     );
 
     const resetPassLink =
@@ -420,7 +420,7 @@ const forgotPassword = async (payload: { email: string }) => {
     await emailSender(
         "Reset Your Password",
         userData.email,
-        GenerateForgetPasswordTemplate(resetPassLink)
+        GenerateForgetPasswordTemplate(resetPassLink),
     );
     return {
         message: "Password Reset Instruction sent to Email",
@@ -441,12 +441,12 @@ const refreshToken = async (payload: { refreshToken: string }) => {
     try {
         decrypted = jwtHelpers.verifyToken(
             payload.refreshToken,
-            config.jwt.jwt_secret as string
+            config.jwt.jwt_secret as string,
         );
     } catch (error) {
         throw new ApiError(
             StatusCodes.BAD_REQUEST,
-            "Refresh Token is Invalid or Expired"
+            "Refresh Token is Invalid or Expired",
         );
     }
 
@@ -468,7 +468,7 @@ const refreshToken = async (payload: { refreshToken: string }) => {
     const accessToken = jwtHelpers.generateToken(
         jwtPayload,
         config.jwt.jwt_secret as Secret,
-        config.jwt.expires_in as string
+        config.jwt.expires_in as string,
     );
 
     return {
@@ -480,7 +480,7 @@ const refreshToken = async (payload: { refreshToken: string }) => {
 // reset password
 const resetPassword = async (
     token: string,
-    payload: { email: string; password: string }
+    payload: { email: string; password: string },
 ) => {
     const userData = await prisma.user.findUnique({
         where: {
@@ -494,7 +494,7 @@ const resetPassword = async (
 
     const isValidToken = jwtHelpers.verifyToken(
         token,
-        config.jwt.reset_pass_secret as Secret
+        config.jwt.reset_pass_secret as Secret,
     );
 
     if (!isValidToken) {

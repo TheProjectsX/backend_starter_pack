@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+
 /**
  * QueryBuilder - Version 2.0
  *
@@ -17,8 +20,8 @@ type IsEnum<T> = T extends string | number
     ? string extends T
         ? false
         : number extends T
-        ? false
-        : true
+          ? false
+          : true
     : false;
 
 type EnumKeys<T> = {
@@ -38,18 +41,18 @@ type CleanOptions<TInclude, TSelect, TOmit> = (TInclude extends undefined
 type JoinRecords<O, N> = (O extends undefined ? {} : O) & N;
 
 type ExtractField<TArgs, K extends keyof any> = [
-    Exclude<TArgs, undefined>
+    Exclude<TArgs, undefined>,
 ] extends [{ [P in K]?: infer S }]
     ? S
     : Record<string, any>;
 
 class QueryBuilder<
     Model extends { findMany: (...args: any) => any },
-    TPayload extends OperationPayload = any,
+    TPayload,
     TFindManyArgs = Parameters<Model["findMany"]>[0],
     TInclude = undefined,
     TSelect = undefined,
-    TOmit = undefined
+    TOmit = undefined,
 > {
     private model: any;
     private query: Record<string, unknown>;
@@ -84,7 +87,7 @@ class QueryBuilder<
     search(
         fields: TFindManyArgs extends { distinct?: infer T }
             ? T & string
-            : string[]
+            : string[],
     ) {
         const searchTerm = this.query.searchTerm as string;
         if (!searchTerm) return this;
@@ -121,7 +124,7 @@ class QueryBuilder<
         exactFields: (
             | EnumKeys<Awaited<ReturnType<Model["findMany"]>>[0]>
             | (string & {})
-        )[]
+        )[],
     ) {
         const queryObj = { ...this.query };
         const excludeFields = [
@@ -151,7 +154,7 @@ class QueryBuilder<
                         }
                         return { [key]: acc };
                     },
-                    {}
+                    {},
                 );
                 Object.assign(formattedFilters, nestedFilter);
             } else {
@@ -222,7 +225,7 @@ class QueryBuilder<
     rawFilter(
         filters: TFindManyArgs extends { where?: infer W }
             ? W
-            : Record<string, any>
+            : Record<string, any>,
     ) {
         const where = this.prismaQuery.where ?? {};
         const newWhere = {
@@ -305,7 +308,7 @@ class QueryBuilder<
         fields: (
             | DateKeys<Awaited<ReturnType<Model["findMany"]>>[0]>
             | (string & {})
-        )[]
+        )[],
     ) {
         const { startDate, endDate } = this.query as {
             startDate?: string;
@@ -355,13 +358,13 @@ class QueryBuilder<
     sortBy(
         fields: TFindManyArgs extends { orderBy?: infer T }
             ? T
-            : Record<string, "asc" | "desc"> | Record<string, "asc" | "desc">[]
+            : Record<string, "asc" | "desc"> | Record<string, "asc" | "desc">[],
     ) {
         const existing = Array.isArray(this.prismaQuery.orderBy)
             ? this.prismaQuery.orderBy
             : this.prismaQuery.orderBy
-            ? [this.prismaQuery.orderBy]
-            : [];
+              ? [this.prismaQuery.orderBy]
+              : [];
         const newFields = Array.isArray(fields) ? fields : [fields];
         this.prismaQuery.orderBy = [...existing, ...newFields];
         return this;
@@ -392,7 +395,7 @@ class QueryBuilder<
                     acc[field] = true;
                     return acc;
                 },
-                {}
+                {},
             );
         }
         return this;
@@ -402,7 +405,7 @@ class QueryBuilder<
      * Adds Prisma include fields to query.
      */
     include<T extends ExtractField<TFindManyArgs, "include">>(
-        fields: T
+        fields: T,
     ): [TSelect] extends [undefined]
         ? QueryBuilder<
               Model,
@@ -421,7 +424,7 @@ class QueryBuilder<
      * Adds Prisma select fields to query.
      */
     select<T extends ExtractField<TFindManyArgs, "select">>(
-        fields: T
+        fields: T,
     ): [TInclude] extends [undefined]
         ? [TOmit] extends [undefined]
             ? QueryBuilder<
@@ -442,7 +445,7 @@ class QueryBuilder<
      * Adds Prisma omit fields to query.
      */
     omit<T extends ExtractField<TFindManyArgs, "omit">>(
-        fields: T
+        fields: T,
     ): [TSelect] extends [undefined]
         ? QueryBuilder<
               Model,
@@ -463,9 +466,15 @@ class QueryBuilder<
     async execute(
         extraOptions: TFindManyArgs extends { [key: string]: any }
             ? TFindManyArgs
-            : Record<string, any> = {} as any
+            : Record<string, any> = {} as any,
     ): Promise<
-        GetResult<TPayload, CleanOptions<TInclude, TSelect, TOmit>, "findMany">
+        TPayload extends OperationPayload
+            ? GetResult<
+                  TPayload,
+                  CleanOptions<TInclude, TSelect, TOmit>,
+                  "findMany"
+              >
+            : Record<string, any>
     > {
         return this.model.findMany({
             ...this.prismaQuery,

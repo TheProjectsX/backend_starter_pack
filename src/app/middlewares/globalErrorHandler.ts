@@ -13,7 +13,7 @@ const GlobalErrorHandler = (
     error: any,
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
 ) => {
     let statusCode: any = StatusCodes.INTERNAL_SERVER_ERROR;
     let message = error.message || "Something went wrong!";

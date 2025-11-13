@@ -13,7 +13,7 @@ const auth = (...roles: UserRole[]) => {
     return async (
         req: Request & { user?: any },
         res: Response,
-        next: NextFunction
+        next: NextFunction,
     ) => {
         try {
             const token = req.headers.authorization;
@@ -21,13 +21,13 @@ const auth = (...roles: UserRole[]) => {
             if (!token) {
                 throw new ApiError(
                     StatusCodes.UNAUTHORIZED,
-                    "You are not authorized!"
+                    "You are not authorized!",
                 );
             }
 
             const verifiedUser = jwtHelpers.verifyToken(
                 token,
-                config.jwt.jwt_secret as Secret
+                config.jwt.jwt_secret as Secret,
             );
 
             const user = await prisma.user.findUnique({
@@ -39,7 +39,7 @@ const auth = (...roles: UserRole[]) => {
             if (!user) {
                 throw new ApiError(
                     StatusCodes.NOT_FOUND,
-                    "This user is not found !"
+                    "This user is not found !",
                 );
             }
 

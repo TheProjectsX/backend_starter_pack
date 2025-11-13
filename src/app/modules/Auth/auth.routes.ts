@@ -8,9 +8,9 @@ const router = express.Router();
 
 // user register
 router.post(
-	"/register",
-	validateRequest(AuthValidation.userRegisterSchema),
-	AuthController.register
+    "/register",
+    validateRequest(AuthValidation.userRegisterSchema),
+    AuthController.register,
 );
 // user login route
 router.post("/login", AuthController.loginUserWithEmail);
@@ -23,10 +23,10 @@ router.post("/logout", AuthController.logoutUser);
 router.get("/get-me", auth(), AuthController.getMyProfile);
 
 router.put(
-	"/change-password",
-	auth(),
-	validateRequest(AuthValidation.changePasswordValidationSchema),
-	AuthController.changePassword
+    "/change-password",
+    auth(),
+    validateRequest(AuthValidation.changePasswordValidationSchema),
+    AuthController.changePassword,
 );
 
 router.post("/forgot-password", AuthController.forgotPassword);
@@ -35,9 +35,9 @@ router.post("/reset-password", AuthController.resetPassword);
 
 router.get("/verify-email", AuthController.verifyEmail);
 router.post(
-	"/refresh-token",
-	validateRequest(AuthValidation.refreshTokenValidationSchema),
-	AuthController.refreshToken
+    "/refresh-token",
+    validateRequest(AuthValidation.refreshTokenValidationSchema),
+    AuthController.refreshToken,
 );
 
 // // Google Login Routes

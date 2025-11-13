@@ -52,7 +52,7 @@ const verifyEmail = catchAsync(async (req, res) => {
     try {
         decodedToken = jwtHelpers.verifyToken(
             token as string,
-            config.jwt.jwt_secret as string
+            config.jwt.jwt_secret as string,
         );
     } catch (error) {
         return res.status(400).send(templateError);

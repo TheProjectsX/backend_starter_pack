@@ -4,7 +4,7 @@ import config from "../../config";
 sgMail.setApiKey(config.sendGrid.api_key as string);
 
 const sendGridBulkEmailSender = async (
-    emails: { subject: string; email: string; html: string }[]
+    emails: { subject: string; email: string; html: string }[],
 ) => {
     const messages = emails.map(({ subject, email, html }) => ({
         to: email,
@@ -21,7 +21,7 @@ const sendGridBulkEmailSender = async (
     } catch (error: any) {
         console.error(
             "Error sending bulk emails:",
-            error?.response?.body || error
+            error?.response?.body || error,
         );
         throw error;
     }
