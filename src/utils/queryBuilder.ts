@@ -474,7 +474,7 @@ class QueryBuilder<
                   CleanOptions<TInclude, TSelect, TOmit>,
                   "findMany"
               >
-            : Record<string, any>
+            : any[]
     > {
         const query = this.cleanQuery(this.prismaQuery);
 
@@ -508,7 +508,8 @@ class QueryBuilder<
         };
     }
 
-    // Utility Functions
+    // Utility Functions - Clean Query
+    // Remove AND and OR if it's empty
     private cleanQuery(query: Record<string, any>) {
         if (!query.where) return query;
 
