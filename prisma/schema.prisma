@@ -19,11 +19,11 @@ model User {
     phone    String?
     password String
 
-    role   UserRole
+    role   UserRole       @default(USER)
     status ActivityStatus @default(ACTIVE)
 
-    isEmailVerified Boolean @default(false)
-    isDeleted       Boolean @default(false)
+    verified Boolean @default(false)
+    deleted  Boolean @default(false)
 
     otp       String?
     otpExpiry DateTime?

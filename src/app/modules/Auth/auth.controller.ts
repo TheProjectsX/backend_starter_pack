@@ -12,18 +12,17 @@ import config from "../../../config";
 import prisma from "../../../shared/prisma";
 
 const register = catchAsync(async (req: Request, res: Response) => {
-    const result = await AuthServices.register(req);
+    const result = await AuthServices.register(req.body);
 
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
         message: result.message,
-        data: result.data,
     });
 });
 
-const loginUserWithEmail = catchAsync(async (req: Request, res: Response) => {
-    const result = await AuthServices.loginUserWithEmail(req.body);
+const loginWithEmail = catchAsync(async (req: Request, res: Response) => {
+    const result = await AuthServices.loginWithEmail(req.body);
 
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
@@ -39,56 +38,23 @@ const loginUserWithEmail = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const verifyEmail = catchAsync(async (req, res) => {
-    const { token } = req.query;
-
-    const templateError = emailVerifiedFailedTemplate();
-    // If no token provided
-    if (!token) {
-        return res.status(400).send(templateError);
-    }
-
-    let decodedToken;
-    try {
-        decodedToken = jwtHelpers.verifyToken(
-            token as string,
-            config.jwt.jwt_secret as string,
-        );
-    } catch (error) {
-        return res.status(400).send(templateError);
-    }
-
-    // If token is invalid or decoding failed
-    if (!decodedToken || !decodedToken.email) {
-        return res.status(400).send(templateError);
-    }
-
-    // Update user verification status
-    await prisma.user.update({
-        where: { email: decodedToken.email },
-        data: { isEmailVerified: true },
-    });
-
-    // Success Email Template
-
-    // Send success template
-    return res.status(200).send(emailVerifiedSuccessTemplate());
-});
-
-const enterOtp = catchAsync(async (req: Request, res: Response) => {
-    const result = await AuthServices.enterOtp(req.body);
-
-    res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: config.env !== "development",
-        sameSite: "lax",
-    });
+const resendOTP = catchAsync(async (req: Request, res: Response) => {
+    const result = await AuthServices.resendOTP(req.body);
 
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
         message: result.message,
-        data: result.data,
+    });
+});
+
+const verifyOTP = catchAsync(async (req: Request, res: Response) => {
+    const result = await AuthServices.verifyOTP(req.body);
+
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: result.message,
     });
 });
 
@@ -107,20 +73,6 @@ const logoutUser = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-// get user profile
-const getMyProfile = catchAsync(async (req: Request, res: Response) => {
-    const userToken = req.headers.authorization;
-    const result = await AuthServices.getMyProfile(userToken as string);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: 201,
-        message: result.message,
-        data: result.data,
-    });
-});
-
-// Change Password
 const changePassword = catchAsync(async (req: Request, res: Response) => {
     const user = req.user;
 
@@ -133,7 +85,6 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-// Forgot Password
 const forgotPassword = catchAsync(async (req: Request, res: Response) => {
     const result = await AuthServices.forgotPassword(req.body);
 
@@ -144,7 +95,6 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-// Refresh Token
 const refreshToken = catchAsync(async (req, res) => {
     const result = await AuthServices.refreshToken(req.body);
 
@@ -155,10 +105,11 @@ const refreshToken = catchAsync(async (req, res) => {
         data: result.data,
     });
 });
+
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
     const token = req.headers.authorization || "";
 
-    const result = await AuthServices.resetPassword(token, req.body);
+    const result = await AuthServices.resetPassword(req.body);
 
     sendResponse(res, {
         statusCode: StatusCodes.OK,
@@ -168,14 +119,13 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const AuthController = {
-    loginUserWithEmail,
-    enterOtp,
+    loginWithEmail,
+    resendOTP,
+    verifyOTP,
     logoutUser,
-    getMyProfile,
     changePassword,
     forgotPassword,
     resetPassword,
     register,
-    verifyEmail,
     refreshToken,
 };

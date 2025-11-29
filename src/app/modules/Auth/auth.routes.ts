@@ -6,21 +6,18 @@ import { AuthValidation } from "./auth.validation";
 
 const router = express.Router();
 
-// user register
 router.post(
     "/register",
     validateRequest(AuthValidation.userRegisterSchema),
     AuthController.register,
 );
-// user login route
-router.post("/login", AuthController.loginUserWithEmail);
 
-router.post("/otp-enter", AuthController.enterOtp);
+router.post("/login", AuthController.loginWithEmail);
 
-// user logout route
+router.post("/resend-otp", AuthController.resendOTP);
+router.post("/verify-otp", AuthController.verifyOTP);
+
 router.post("/logout", AuthController.logoutUser);
-
-router.get("/get-me", auth(), AuthController.getMyProfile);
 
 router.put(
     "/change-password",
@@ -33,7 +30,6 @@ router.post("/forgot-password", AuthController.forgotPassword);
 
 router.post("/reset-password", AuthController.resetPassword);
 
-router.get("/verify-email", AuthController.verifyEmail);
 router.post(
     "/refresh-token",
     validateRequest(AuthValidation.refreshTokenValidationSchema),

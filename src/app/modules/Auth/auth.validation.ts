@@ -6,19 +6,24 @@ const userRegisterSchema = z
         email: z.email(),
         phone: z.string(),
         password: z.string(),
-        role: z.enum(["INVESTOR", "COMPANY"]),
     })
     .strict();
+export type UserRegisterInput = z.infer<typeof userRegisterSchema>;
+
 const changePasswordValidationSchema = z.object({
     oldPassword: z.string().min(8),
     newPassword: z.string().min(8),
 });
+export type ChangePasswordInput = z.infer<
+    typeof changePasswordValidationSchema
+>;
 
 const refreshTokenValidationSchema = z.object({
     cookies: z.object({
         refreshToken: z.string(),
     }),
 });
+export type RefreshTokenInput = z.infer<typeof refreshTokenValidationSchema>;
 
 export const AuthValidation = {
     changePasswordValidationSchema,
