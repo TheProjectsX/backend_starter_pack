@@ -3,13 +3,7 @@ import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import { StatusCodes } from "http-status-codes";
 import { AuthServices } from "./auth.service";
-import {
-    emailVerifiedFailedTemplate,
-    emailVerifiedSuccessTemplate,
-} from "./auth.template";
-import { jwtHelpers } from "../../../helpers/jwtHelpers";
 import config from "../../../config";
-import prisma from "../../../shared/prisma";
 
 const register = catchAsync(async (req: Request, res: Response) => {
     const result = await AuthServices.register(req.body);

@@ -4,17 +4,21 @@ import ApiError from "../../errors/ApiErrors";
 
 const emailSender = async (subject: string, email: string, html: string) => {
     const transporter = nodemailer.createTransport({
+        // For Gmail
         service: "gmail",
+        // For other service
+        // host: config.smtp.host,
+        // port: config.smtp.port,
         auth: {
-            user: config.emailSender.email,
-            pass: config.emailSender.app_pass,
+            user: config.smtp.email,
+            pass: config.smtp.pass,
         },
     });
 
     const emailTransport = transporter;
 
     const mailOptions = {
-        from: `"${config.company_name}" <${config.emailSender.email}>`,
+        from: `"${config.company_name}" <${config.smtp.sender}>`,
         to: email,
         subject,
         html,

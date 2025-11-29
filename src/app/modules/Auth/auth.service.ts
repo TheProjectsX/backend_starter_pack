@@ -8,11 +8,9 @@ import ApiError from "../../../errors/ApiErrors";
 import { jwtHelpers } from "../../../helpers/jwtHelpers";
 import prisma from "../../../shared/prisma";
 import emailSender from "../../../helpers/emailSender/emailSender";
-import { Request } from "express";
-import jwt, { JwtPayload, Secret } from "jsonwebtoken";
+import { JwtPayload, Secret } from "jsonwebtoken";
 import {
-    generateEmailVerifyTemplate,
-    GenerateForgetPasswordTemplate,
+    generateForgetPasswordTemplate,
     generateVerifyOTPTemplate,
 } from "./auth.template";
 import { StatusCodes } from "http-status-codes";
@@ -108,7 +106,7 @@ const loginWithEmail = async (payload: { email: string; password: string }) => {
             role: userData.role,
         },
         config.jwt.jwt_secret as Secret,
-        config.jwt.expires_in as string,
+        config.jwt.jwt_secret_expires_in as string,
     );
 
     const refreshToken = jwtHelpers.generateToken(
@@ -342,15 +340,15 @@ const forgotPassword = async (payload: { email: string }) => {
 
     const resetPassToken = jwtHelpers.generateToken(
         { email: userData.email, role: userData.role },
-        config.jwt.reset_pass_secret as Secret,
-        config.jwt.reset_pass_token_expires_in as string,
+        config.jwt.reset_token_secret as Secret,
+        config.jwt.reset_token_expires_in as string,
     );
 
     const resetPassLink =
-        config.reset_pass_link +
+        config.url.reset_pass +
         `?userId=${userData.id}&token=${resetPassToken}`;
 
-    const html = GenerateForgetPasswordTemplate(resetPassLink);
+    const html = generateForgetPasswordTemplate(resetPassLink);
 
     await emailSender("Reset Your Password", userData.email, html);
     return {
@@ -394,7 +392,7 @@ const refreshToken = async (payload: { refreshToken: string }) => {
     const accessToken = jwtHelpers.generateToken(
         jwtPayload,
         config.jwt.jwt_secret as Secret,
-        config.jwt.expires_in as string,
+        config.jwt.jwt_secret_expires_in as string,
     );
 
     return {
