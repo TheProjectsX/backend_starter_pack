@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 
-import { Secret } from "jsonwebtoken";
+import { JwtPayload, Secret } from "jsonwebtoken";
 import config from "../../config";
 
 import { StatusCodes } from "http-status-codes";
@@ -11,7 +11,7 @@ import { UserRole } from "@prisma/client";
 
 const auth = (...roles: UserRole[]) => {
     return async (
-        req: Request & { user?: any },
+        req: Request & { user?: JwtPayload },
         res: Response,
         next: NextFunction,
     ) => {

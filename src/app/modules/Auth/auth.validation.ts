@@ -1,10 +1,9 @@
-import { UserRole } from "@prisma/client";
 import { z } from "zod";
 
 const userRegisterSchema = z
     .object({
         name: z.string(),
-        email: z.string().email(),
+        email: z.email(),
         phone: z.string(),
         password: z.string(),
         role: z.enum(["INVESTOR", "COMPANY"]),

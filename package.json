@@ -9,7 +9,8 @@
         "build": "tsc",
         "test": "echo \"Error: no test specified\" && exit 1",
         "cModule": "node scripts/generateModule.js",
-        "postinstall": "npx prisma generate"
+        "postinstall": "npx prisma generate",
+        "check": "eslint src && npx prettier --write src"
     },
     "keywords": [],
     "author": "TheProjectsX",
@@ -25,11 +26,13 @@
         "@types/node-cron": "^3.0.11",
         "@types/nodemailer": "^7.0.1",
         "@types/uuid": "^10.0.0",
+        "eslint": "^9.39.1",
         "prisma": "^6.15.0",
         "prisma-dbml-generator": "^0.12.0",
         "ts-node": "^10.9.2",
         "ts-node-dev": "^2.0.0",
-        "typescript": "^5.9.2"
+        "typescript": "^5.9.2",
+        "typescript-eslint": "^8.48.0"
     },
     "dependencies": {
         "@prisma/client": "^6.15.0",

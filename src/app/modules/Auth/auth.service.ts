@@ -34,6 +34,7 @@ const register = async (req: Request) => {
     const response = prisma.$transaction(async (TX) => {
         const user = await TX.user.create({
             data: { ...payload, password: hashedPassword },
+            omit: { password: true },
         });
 
         const payloadData = {
@@ -57,9 +58,7 @@ const register = async (req: Request) => {
             html,
         );
 
-        const { password, ...result } = user;
-
-        return result;
+        return user;
     });
 
     return {
@@ -186,10 +185,7 @@ const enterOtp = async (payload: {
         throw new ApiError(400, "Your otp has been expired");
     }
 
-    let accessToken;
-    let refreshToken;
-
-    accessToken = jwtHelpers.generateToken(
+    const accessToken = jwtHelpers.generateToken(
         {
             id: userData.id,
             email: userData.email,
@@ -199,7 +195,7 @@ const enterOtp = async (payload: {
         config.jwt.expires_in as string,
     );
 
-    refreshToken = jwtHelpers.generateToken(
+    const refreshToken = jwtHelpers.generateToken(
         {
             id: userData.id,
             email: userData.email,

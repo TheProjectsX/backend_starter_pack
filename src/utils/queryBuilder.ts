@@ -20,8 +20,8 @@ type IsEnum<T> = T extends string | number
     ? string extends T
         ? false
         : number extends T
-        ? false
-        : true
+          ? false
+          : true
     : false;
 
 type EnumKeys<T> = {
@@ -46,10 +46,13 @@ type ExtractField<TArgs, K extends keyof any> = [
     ? S
     : Record<string, any>;
 
+type Flatten<T> = T extends any[] ? T[number] : T;
+type WithString<T> = Array<Flatten<T> | string>;
+
 class QueryBuilder<
     Model extends { findMany: (...args: any) => any },
     TPayload,
-    TFindManyArgs = Parameters<Model["findMany"]>[0],
+    TFindManyArgs = NonNullable<Parameters<Model["findMany"]>[0]>,
     TInclude = undefined,
     TSelect = undefined,
     TOmit = undefined,
@@ -86,7 +89,7 @@ class QueryBuilder<
      */
     search(
         fields: TFindManyArgs extends { distinct?: infer T }
-            ? T & string
+            ? WithString<T>
             : string[],
     ) {
         const searchTerm = this.query.searchTerm as string;
@@ -224,7 +227,7 @@ class QueryBuilder<
      */
     rawFilter(
         filters: TFindManyArgs extends { where?: infer W }
-            ? W
+            ? NonNullable<W>
             : Record<string, any>,
     ) {
         const where = this.prismaQuery.where ?? {};
@@ -319,19 +322,26 @@ class QueryBuilder<
         if (startDate) rangeQuery.gte = new Date(startDate);
         if (endDate) rangeQuery.lte = new Date(endDate);
 
-        if (!startDate && !endDate) return;
+        if (!startDate && !endDate) return this;
+
+        const stringFields = fields as readonly string[];
 
         this.prismaQuery.where = {
             ...this.prismaQuery.where,
-            OR: (fields as string[]).map((field) => {
+            OR: stringFields.map((field) => {
                 const parts = field.split(".");
-                return parts.reduceRight<any>((acc, key, index) => {
-                    return index === parts.length - 1
-                        ? { [key]: rangeQuery }
-                        : { [key]: acc };
-                }, {});
+                return parts.reduceRight(
+                    (acc, key, index) => {
+                        return index === parts.length - 1
+                            ? { [key]: rangeQuery }
+                            : { [key]: acc };
+                    },
+                    {} as Record<string, any>,
+                );
             }),
         };
+
+        return this;
     }
 
     /**
@@ -363,8 +373,8 @@ class QueryBuilder<
         const existing = Array.isArray(this.prismaQuery.orderBy)
             ? this.prismaQuery.orderBy
             : this.prismaQuery.orderBy
-            ? [this.prismaQuery.orderBy]
-            : [];
+              ? [this.prismaQuery.orderBy]
+              : [];
         const newFields = Array.isArray(fields) ? fields : [fields];
         this.prismaQuery.orderBy = [...existing, ...newFields];
         return this;
@@ -508,8 +518,7 @@ class QueryBuilder<
         };
     }
 
-    // Utility Functions - Clean Query
-    // Remove AND and OR if it's empty
+    // Utility Functions
     private cleanQuery(query: Record<string, any>) {
         if (!query.where) return query;
 

@@ -1,4 +1,4 @@
-import express from "express";
+import express, { RequestHandler } from "express";
 
 import { AuthRoutes } from "../modules/Auth/auth.routes";
 
@@ -11,7 +11,7 @@ const moduleRoutes = [
     },
 ] satisfies {
     path: string;
-    handlers: any[];
+    handlers: RequestHandler[];
 }[];
 
 moduleRoutes.forEach((route) => router.use(route.path, ...route.handlers));
