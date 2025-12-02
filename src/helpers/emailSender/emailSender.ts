@@ -10,7 +10,7 @@ const emailSender = async (subject: string, email: string, html: string) => {
         // host: config.smtp.host,
         // port: config.smtp.port,
         auth: {
-            user: config.smtp.email,
+            user: config.smtp.user,
             pass: config.smtp.pass,
         },
     });
