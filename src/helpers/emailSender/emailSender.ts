@@ -2,7 +2,15 @@ import nodemailer from "nodemailer";
 import config from "../../config";
 import ApiError from "../../errors/ApiErrors";
 
-const emailSender = async (subject: string, email: string, html: string) => {
+const emailSender = async ({
+    email,
+    subject,
+    html,
+}: {
+    email: string;
+    subject: string;
+    html: string;
+}) => {
     const transporter = nodemailer.createTransport({
         // For Gmail
         service: "gmail",

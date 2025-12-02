@@ -38,12 +38,11 @@ const register = async (payload: UserRegisterInput) => {
     });
 
     const html = generateVerifyOTPTemplate(otp);
-
-    await emailSender(
-        `Account Verification Code - ${config.company_name}`,
-        response.email,
+    await emailSender({
+        email: response.email,
+        subject: `Account Verification Code - ${config.company_name}`,
         html,
-    );
+    });
 
     return {
         message: "Verification code sent",
@@ -88,11 +87,11 @@ const loginWithEmail = async (payload: { email: string; password: string }) => {
         });
 
         const html = generateVerifyOTPTemplate(otp);
-        await emailSender(
-            `Account Verification Code - ${config.company_name}`,
-            userData.email,
+        await emailSender({
+            email: userData.email,
+            subject: `Account Verification Code - ${config.company_name}`,
             html,
-        );
+        });
 
         return {
             message: "Check Email and Verify your account first!",
@@ -152,11 +151,11 @@ const resendOTP = async (payload: { email: string }) => {
     });
 
     const html = generateVerifyOTPTemplate(otp);
-    await emailSender(
-        `Account Verification Code - ${config.company_name}`,
-        userData.email,
+    await emailSender({
+        email: userData.email,
+        subject: `Account Verification Code - ${config.company_name}`,
         html,
-    );
+    });
 
     return {
         message: "OTP Resent Successfully!",
@@ -349,8 +348,12 @@ const forgotPassword = async (payload: { email: string }) => {
         `?userId=${userData.id}&token=${resetPassToken}`;
 
     const html = generateForgetPasswordTemplate(resetPassLink);
+    await emailSender({
+        email: userData.email,
+        subject: `Password Reset Request - ${config.company_name}`,
+        html,
+    });
 
-    await emailSender("Reset Your Password", userData.email, html);
     return {
         message: "Password Reset Instructions sent to Email",
     };

@@ -11,7 +11,7 @@ export default {
         frontend: process.env.FRONTEND_URL,
         backend: process.env.BACKEND_URL,
         uploads: process.env.BACKEND_UPLOADS_URL,
-        reset_pass: process.env.RESET_PASS_URL
+        reset_pass: process.env.RESET_PASS_URL,
     },
     stripe: {
         secret_key: process.env.STRIPE_SECRET_KEY,
@@ -32,7 +32,7 @@ export default {
         port: process.env.SMTP_PORT,
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
-        sender: process.env.SENDER_EMAIL
+        sender: process.env.SENDER_EMAIL,
     },
     paypal: {
         client_id: process.env.PAYPEL_CLIENT_ID,

@@ -73,8 +73,8 @@ export const generateVerifyOTPTemplate = (otp: string) => {
                     <div style="background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #6c757d;">
                         <p style="margin: 0 0 10px;">This is an automated message, please do not reply to this email.</p>
                        <p style="margin: 0;">© ${new Date().getFullYear()} ${
-        process.env.COMPANY_NAME
-    }. All rights reserved.</p>
+                           process.env.COMPANY_NAME
+                       }. All rights reserved.</p>
                     </div>
                 </div>
             </body>
@@ -115,8 +115,8 @@ export const generateForgetPasswordTemplate = (resetPassLink: string) => {
         <div style="background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #6c757d;">
                         <p style="margin: 0 0 10px;">This is an automated message, please do not reply to this email.</p>
                        <p style="margin: 0;">© ${new Date().getFullYear()} ${
-        process.env.COMPANY_NAME
-    }. All rights reserved.</p>
+                           process.env.COMPANY_NAME
+                       }. All rights reserved.</p>
                     </div>
     </div>
 </body>
