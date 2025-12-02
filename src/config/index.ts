@@ -30,8 +30,8 @@ export default {
     smtp: {
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
-        email: process.env.EMAIL,
-        pass: process.env.APP_PASS,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
         sender: process.env.SENDER_EMAIL
     },
     paypal: {
