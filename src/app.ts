@@ -25,6 +25,8 @@ app.get("/", (req: Request, res: Response) => {
     res.send({
         success: true,
         message: "El Psy Congroo!",
+        server_name: "backend_starter_pack",
+        server_type: "WEB",
     });
 });
 

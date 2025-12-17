@@ -29,13 +29,13 @@ export default {
     },
     smtp: {
         host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
+        port: Number(process.env.SMTP_PORT),
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
         sender: process.env.SENDER_EMAIL,
     },
     paypal: {
-        client_id: process.env.PAYPEL_CLIENT_ID,
+        client_id: process.env.PAYPAL_CLIENT_ID,
         client_secret: process.env.PAYPAL_CLIENT_SECRET,
         mode: process.env.PAYPAL_MODE,
     },

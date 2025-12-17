@@ -20,8 +20,8 @@ type IsEnum<T> = T extends string | number
     ? string extends T
         ? false
         : number extends T
-          ? false
-          : true
+        ? false
+        : true
     : false;
 
 type EnumKeys<T> = {
@@ -46,8 +46,7 @@ type ExtractField<TArgs, K extends keyof any> = [
     ? S
     : Record<string, any>;
 
-type Flatten<T> = T extends any[] ? T[number] : T;
-type WithString<T> = Array<Flatten<T> | string>;
+type WithString<T> = Array<Exclude<T, T[] | undefined> | (string & {})>;
 
 class QueryBuilder<
     Model extends { findMany: (...args: any) => any },
@@ -256,48 +255,61 @@ class QueryBuilder<
     }
 
     /**
-     * Applies date range filters from query.dateRange.
-     * Supports multiple fields with gte/lte.
-     * Ex: createdAt[2025-02-19T10:13:59.425Z,2025-02-20T10:13:59.425Z];updatedAt[2025-02-19T12:00:00.000Z,2025-02-19T15:00:00.000Z]
+     * Applies range filters to specified fields using query values.
+     *
+     * Supports nested fields using "." notation (e.g., "user.createdAt").
+     * Automatically casts query values based on the specified type.
+     * Merges multiple filters into the Prisma `OR` condition.
+     *
+     * Handles types: "date", "number", or "string" for proper casting.
      */
-    range() {
-        const dateRanges = this.query.dateRange
-            ? (this.query.dateRange as string).split(";")
-            : [];
-        if (dateRanges.length > 0) {
-            const rangeFilters: Record<string, any>[] = [];
 
-            dateRanges.forEach((range) => {
-                const [fieldName, dateRange] = range.split("[");
-                if (fieldName && dateRange) {
-                    const cleanedDateRange = dateRange.replace("]", "");
-                    const [startRange, endRange] = cleanedDateRange.split(",");
+    range(
+        filters: {
+            field: TFindManyArgs extends { distinct?: infer T }
+                ? T | (string & {})
+                : string;
+            startKey: string;
+            endKey: string;
+            type: "date" | "number" | "string";
+        }[],
+    ) {
+        filters.forEach(({ field, startKey, endKey, type }) => {
+            let minValue = this.query[startKey];
+            let maxValue = this.query[endKey];
 
-                    const rangeFilter: Record<string, any> = {};
-                    if (startRange && endRange) {
-                        rangeFilter[fieldName] = {
-                            gte: new Date(startRange),
-                            lte: new Date(endRange),
-                        };
-                    } else if (startRange) {
-                        rangeFilter[fieldName] = { gte: new Date(startRange) };
-                    } else if (endRange) {
-                        rangeFilter[fieldName] = { lte: new Date(endRange) };
-                    }
+            if (minValue === undefined && maxValue === undefined) return;
 
-                    if (Object.keys(rangeFilter).length > 0) {
-                        rangeFilters.push(rangeFilter);
-                    }
-                }
-            });
-
-            if (rangeFilters.length > 0) {
-                this.prismaQuery.where = {
-                    ...this.prismaQuery.where,
-                    OR: rangeFilters,
-                };
+            // Cast values based on type
+            if (type === "date") {
+                if (minValue) minValue = new Date(minValue as string);
+                if (maxValue) maxValue = new Date(maxValue as string);
+            } else if (type === "number") {
+                if (minValue) minValue = Number(minValue);
+                if (maxValue) maxValue = Number(maxValue);
             }
-        }
+
+            const rangeCondition: Record<string, any> = {};
+            if (minValue !== undefined) rangeCondition.gte = minValue;
+            if (maxValue !== undefined) rangeCondition.lte = maxValue;
+
+            // Handle nested fields using "." splitter
+            const pathSegments = (field as string).split(".");
+            const nestedCondition = pathSegments.reduceRight<
+                Record<string, any>
+            >((acc, key, index) => {
+                return index === pathSegments.length - 1
+                    ? { [key]: rangeCondition }
+                    : { [key]: acc };
+            }, {});
+
+            // Merge with existing OR conditions
+            const existingOr = this.prismaQuery.where?.OR || [];
+            this.prismaQuery.where = {
+                ...this.prismaQuery.where,
+                OR: [...existingOr, nestedCondition],
+            };
+        });
 
         return this;
     }
@@ -330,14 +342,11 @@ class QueryBuilder<
             ...this.prismaQuery.where,
             OR: stringFields.map((field) => {
                 const parts = field.split(".");
-                return parts.reduceRight(
-                    (acc, key, index) => {
-                        return index === parts.length - 1
-                            ? { [key]: rangeQuery }
-                            : { [key]: acc };
-                    },
-                    {} as Record<string, any>,
-                );
+                return parts.reduceRight((acc, key, index) => {
+                    return index === parts.length - 1
+                        ? { [key]: rangeQuery }
+                        : { [key]: acc };
+                }, {} as Record<string, any>);
             }),
         };
 
@@ -345,11 +354,11 @@ class QueryBuilder<
     }
 
     /**
-     * Applies sorting from query.sort string.
+     * Applies sorting from query.order string.
      * Supports "-" prefix for descending order.
      */
     sort() {
-        const sort = (this.query.sort as string)?.split(",") || ["-createdAt"];
+        const sort = (this.query.order as string)?.split(",") || ["-createdAt"];
         const orderBy = sort.map((field) => {
             if (field.startsWith("-")) {
                 return { [field.slice(1)]: "desc" };
@@ -373,8 +382,8 @@ class QueryBuilder<
         const existing = Array.isArray(this.prismaQuery.orderBy)
             ? this.prismaQuery.orderBy
             : this.prismaQuery.orderBy
-              ? [this.prismaQuery.orderBy]
-              : [];
+            ? [this.prismaQuery.orderBy]
+            : [];
         const newFields = Array.isArray(fields) ? fields : [fields];
         this.prismaQuery.orderBy = [...existing, ...newFields];
         return this;
@@ -426,7 +435,10 @@ class QueryBuilder<
               TOmit
           >
         : "Please either choose `select` or `include`" {
-        this.prismaQuery.include = { ...this.prismaQuery.include, ...fields! };
+        this.prismaQuery.include = {
+            ...this.prismaQuery.include,
+            ...(fields as Record<string, unknown>),
+        };
         return this as any;
     }
 
@@ -447,7 +459,10 @@ class QueryBuilder<
               >
             : "Please either choose `select` or `omit`"
         : "Please either choose `select` or `include`" {
-        this.prismaQuery.select = { ...this.prismaQuery.select, ...fields! };
+        this.prismaQuery.select = {
+            ...this.prismaQuery.select,
+            ...(fields as Record<string, unknown>),
+        };
         return this as any;
     }
 
@@ -466,7 +481,10 @@ class QueryBuilder<
               JoinRecords<TOmit, T>
           >
         : "Please either choose `select` or `omit`" {
-        this.prismaQuery.omit = { ...this.prismaQuery.omit, ...fields! };
+        this.prismaQuery.omit = {
+            ...this.prismaQuery.omit,
+            ...(fields as Record<string, unknown>),
+        };
         return this as any;
     }
 

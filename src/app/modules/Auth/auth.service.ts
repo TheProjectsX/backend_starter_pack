@@ -170,15 +170,15 @@ const verifyOTP = async (payload: { otp: string; email: string }) => {
     });
 
     if (!userData) {
-        throw new ApiError(404, "User not found");
+        throw new ApiError(StatusCodes.NOT_FOUND, "User not found");
     }
 
     if (userData.otp !== payload.otp) {
-        throw new ApiError(404, "Incorrect OTP");
+        throw new ApiError(StatusCodes.FORBIDDEN, "Incorrect OTP");
     }
 
     if (userData.otpExpiry && userData.otpExpiry < new Date()) {
-        throw new ApiError(400, "OTP expired");
+        throw new ApiError(StatusCodes.BAD_REQUEST, "OTP expired");
     }
 
     await prisma.user.update({
@@ -188,6 +188,7 @@ const verifyOTP = async (payload: { otp: string; email: string }) => {
         data: {
             otp: null,
             otpExpiry: null,
+            verified: true,
         },
     });
 
@@ -334,7 +335,7 @@ const forgotPassword = async (payload: { email: string }) => {
         },
     });
     if (!userData) {
-        throw new ApiError(404, "User not found");
+        throw new ApiError(StatusCodes.NOT_FOUND, "User not found");
     }
 
     const resetPassToken = jwtHelpers.generateToken(
@@ -410,13 +411,13 @@ const resetPassword = async (payload: { token: string; password: string }) => {
     try {
         decrypted = jwtHelpers.verifyToken(
             payload.token,
-            config.jwt.jwt_secret as string,
+            config.jwt.reset_token_secret as string,
         );
     } catch (error) {
         throw new ApiError(StatusCodes.BAD_REQUEST, "Invalid Token");
     }
 
-    const userData = await prisma.user.findUniqueOrThrow({
+    const userData = await prisma.user.findUnique({
         where: {
             email: decrypted.email,
         },
