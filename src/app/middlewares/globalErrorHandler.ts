@@ -21,7 +21,6 @@ const GlobalErrorHandler = (
     let message = error.message || "Something went wrong!";
     let errorMessages: IGenericErrorMessage[] = [];
 
-    console.log(message);
     // handle prisma client validation errors
     if (error instanceof Prisma.PrismaClientValidationError) {
         const simplifiedError = handleValidationError(error);
@@ -155,9 +154,9 @@ const GlobalErrorHandler = (
     res.status(statusCode).json({
         success: false,
         message,
-        errorMessages,
-        err: error,
-        stack: config.env !== "production" ? error?.stack : undefined,
+        errorMessages: config.env === "development" ? errorMessages : undefined,
+        err: config.env === "development" ? error : undefined,
+        stack: config.env === "development" ? error?.stack : undefined,
     });
 };
 

@@ -18,13 +18,13 @@ export const parseVarificationFiles = (
     //   certificateUrl     String? // Link to uploaded certificate
     //   pitchDeckUrl       String?
     if (certificateFile) {
-        req.body.certificateUrl = `${config.backend_url}/uploads/${certificateFile.filename}`;
+        req.body.certificateUrl = `${config.url.backend}/uploads/${certificateFile.filename}`;
     }
     if (logo) {
-        req.body.logo = `${config.backend_url}/uploads/${logo.filename}`;
+        req.body.logo = `${config.url.backend}/uploads/${logo.filename}`;
     }
     if (pitchDeckFile) {
-        req.body.pitchDeckUrl = `${config.backend_url}/uploads/${pitchDeckFile.filename}`;
+        req.body.pitchDeckUrl = `${config.url.backend}/uploads/${pitchDeckFile.filename}`;
     }
 
     console.log({ certificateFile, logo, pitchDeckFile });

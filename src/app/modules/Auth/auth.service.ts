@@ -16,6 +16,7 @@ import {
 import { StatusCodes } from "http-status-codes";
 import { ChangePasswordInput, UserRegisterInput } from "./auth.validation";
 import { generateOTP } from "./auth.utils";
+import { logger } from "../../../utils/logger";
 
 const register = async (payload: UserRegisterInput) => {
     const isUserExists = await prisma.user.findUnique({
@@ -50,7 +51,7 @@ const register = async (payload: UserRegisterInput) => {
 };
 
 const loginWithEmail = async (payload: { email: string; password: string }) => {
-    const userData = await prisma.user.findUniqueOrThrow({
+    const userData = await prisma.user.findUnique({
         where: {
             email: payload.email,
         },

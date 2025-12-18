@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import config from "../../config";
 import ApiError from "../../errors/ApiErrors";
+import { logger } from "../../utils/logger";
 
 const emailSender = async ({
     email,
@@ -35,7 +36,7 @@ const emailSender = async ({
     // Send the email
     try {
         const info = await emailTransport.sendMail(mailOptions);
-        console.log("Email sent: " + info.response);
+        logger("Email sent: " + info.response);
     } catch (error) {
         console.error("Error sending email:", error);
         throw new ApiError(500, "Error sending email");
