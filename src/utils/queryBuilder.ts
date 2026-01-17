@@ -20,8 +20,8 @@ type IsEnum<T> = T extends string | number
     ? string extends T
         ? false
         : number extends T
-        ? false
-        : true
+          ? false
+          : true
     : false;
 
 type EnumKeys<T> = {
@@ -82,7 +82,7 @@ class QueryBuilder<
         this.query = query;
     }
     /**
-     * Adds OR search conditions for specified fields using query.searchTerm.
+     * Adds OR search conditions for specified fields using query.search.
      *
      * Supports nested fields: `["name", "clinic.name"]`
      */
@@ -91,8 +91,8 @@ class QueryBuilder<
             ? WithString<T>
             : string[],
     ) {
-        const searchTerm = this.query.searchTerm as string;
-        if (!searchTerm) return this;
+        const search = this.query.search as string;
+        if (!search) return this;
 
         this.prismaQuery.where = {
             ...this.prismaQuery.where,
@@ -103,7 +103,7 @@ class QueryBuilder<
                         // last part = the actual field
                         return {
                             [key]: {
-                                contains: searchTerm,
+                                contains: search,
                                 mode: "insensitive",
                             },
                         };
@@ -126,11 +126,11 @@ class QueryBuilder<
         exactFields: (
             | EnumKeys<Awaited<ReturnType<Model["findMany"]>>[0]>
             | (string & {})
-        )[],
+        )[] = [],
     ) {
         const queryObj = { ...this.query };
         const excludeFields = [
-            "searchTerm",
+            "search",
             "sort",
             "limit",
             "page",
@@ -342,11 +342,14 @@ class QueryBuilder<
             ...this.prismaQuery.where,
             OR: stringFields.map((field) => {
                 const parts = field.split(".");
-                return parts.reduceRight((acc, key, index) => {
-                    return index === parts.length - 1
-                        ? { [key]: rangeQuery }
-                        : { [key]: acc };
-                }, {} as Record<string, any>);
+                return parts.reduceRight(
+                    (acc, key, index) => {
+                        return index === parts.length - 1
+                            ? { [key]: rangeQuery }
+                            : { [key]: acc };
+                    },
+                    {} as Record<string, any>,
+                );
             }),
         };
 
@@ -382,8 +385,8 @@ class QueryBuilder<
         const existing = Array.isArray(this.prismaQuery.orderBy)
             ? this.prismaQuery.orderBy
             : this.prismaQuery.orderBy
-            ? [this.prismaQuery.orderBy]
-            : [];
+              ? [this.prismaQuery.orderBy]
+              : [];
         const newFields = Array.isArray(fields) ? fields : [fields];
         this.prismaQuery.orderBy = [...existing, ...newFields];
         return this;
@@ -519,20 +522,20 @@ class QueryBuilder<
         page: number;
         limit: number;
         total: any;
-        totalPage: number;
+        totalPages: number;
     }> {
         const query = this.cleanQuery(this.prismaQuery);
 
         const total = await this.model.count({ where: query.where });
         const page = Number(this.query.page) || 1;
         const limit = Number(this.query.limit) || 10;
-        const totalPage = Math.ceil(total / limit);
+        const totalPages = Math.ceil(total / limit);
 
         return {
             page,
             limit,
             total,
-            totalPage,
+            totalPages,
         };
     }
 

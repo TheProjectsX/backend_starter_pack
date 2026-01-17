@@ -14,9 +14,7 @@ datasource db {
 model User {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
-    name     String
-    email    String  @unique
-    phone    String?
+    email    String @unique
     password String
 
     role   UserRole       @default(USER)
@@ -28,10 +26,29 @@ model User {
     otp       String?
     otpExpiry DateTime?
 
+    profile Profile?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     @@map("users")
+}
+
+model Profile {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    userId String @unique @db.ObjectId
+    user   User   @relation(fields: [userId], references: [id])
+
+    avatar      String?
+    name        String?
+    phone       String?
+    description String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("profiles")
 }
 
 // ---------------- ENUM ----------------
@@ -44,4 +61,5 @@ enum UserRole {
 enum ActivityStatus {
     ACTIVE
     INACTIVE
+    SUSPENDED
 }

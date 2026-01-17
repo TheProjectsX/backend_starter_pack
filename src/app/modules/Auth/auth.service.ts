@@ -2,7 +2,6 @@ import {
     comparePassword,
     hashPassword,
 } from "../../../helpers/passwordHelpers";
-
 import config from "../../../config";
 import ApiError from "../../../errors/ApiErrors";
 import { jwtHelpers } from "../../../helpers/jwtHelpers";
@@ -14,16 +13,22 @@ import {
     generateVerifyOTPTemplate,
 } from "./auth.template";
 import { StatusCodes } from "http-status-codes";
-import { ChangePasswordInput, UserRegisterInput } from "./auth.validation";
+import {
+    ChangePasswordInput,
+    ForgetPasswordInput,
+    ResetPasswordInput,
+    UserRegisterInput,
+} from "./auth.validation";
 import { generateOTP } from "./auth.utils";
-import { logger } from "../../../utils/logger";
 
 const register = async (payload: UserRegisterInput) => {
-    const isUserExists = await prisma.user.findUnique({
-        where: { email: payload.email },
+    const { name, phone, email, password } = payload;
+
+    const userExists = await prisma.user.findUnique({
+        where: { email },
     });
 
-    if (isUserExists) {
+    if (userExists) {
         throw new ApiError(
             StatusCodes.CONFLICT,
             "User with this Email already exists!",
@@ -32,9 +37,20 @@ const register = async (payload: UserRegisterInput) => {
 
     const { otp, otpExpiry } = generateOTP();
 
-    const hashedPassword: string = await hashPassword(payload.password);
+    const hashedPassword: string = await hashPassword(password);
     const response = await prisma.user.create({
-        data: { ...payload, otp, otpExpiry, password: hashedPassword },
+        data: {
+            email,
+            password: hashedPassword,
+            otp,
+            otpExpiry,
+            profile: {
+                create: {
+                    name,
+                    phone
+                },
+            },
+        },
         omit: { password: true },
     });
 
@@ -46,6 +62,7 @@ const register = async (payload: UserRegisterInput) => {
     });
 
     return {
+        code: otp,
         message: "Verification code sent",
     };
 };
@@ -75,7 +92,8 @@ const loginWithEmail = async (payload: { email: string; password: string }) => {
 
     if (userData.status === "INACTIVE")
         throw new ApiError(StatusCodes.FORBIDDEN, "This account is Inactive");
-    if (userData.deleted) throw new ApiError(400, "Invalid Credentials");
+    // if (userData.status === "DELETED")
+    //     throw new ApiError(400, "Invalid Credentials");
 
     if (!userData?.verified) {
         const { otp, otpExpiry } = generateOTP();
@@ -198,92 +216,6 @@ const verifyOTP = async (payload: { otp: string; email: string }) => {
     };
 };
 
-// const loginWithGoogle = async (payload: {
-// 	name:string
-// 	email: string;
-// 	profileImage: string;
-// }) => {
-// 	const userData = await prisma.user.findUnique({
-// 		where: {
-// 			email: payload.email,
-// 		},
-// 	});
-
-// 	if (!userData) {
-// 		const newUser = await prisma.user.create({
-// 			data: {
-// 				name:payload.name,
-// 				email: payload.email,
-
-// 			},
-// 		});
-
-// 		const accessToken = jwtHelpers.generateToken(
-// 			{
-// 				id: newUser.id,
-// 				email: newUser.email,
-// 				role: UserRole.NORMAL_USER,
-// 			},
-// 			config.jwt.jwt_secret as Secret,
-// 			config.jwt.expires_in as string
-// 		);
-
-// 		const refreshToken = jwtHelpers.generateToken(
-// 			{
-// 				id: newUser.id,
-// 				email: newUser.email,
-// 				role: UserRole.NORMAL_USER,
-// 			},
-// 			config.jwt.refresh_token_secret as Secret,
-// 			config.jwt.expires_in as string
-// 		);
-
-// 		return { message: "User created successfully", accessToken, refreshToken };
-// 	}
-
-// 	if (userData.provider !== Provider.GOOGLE) {
-// 		throw new ApiError(400, "Please login with your email and password");
-// 	}
-
-// 	if (userData.status === UserStatus.INACTIVE) {
-// 		throw new ApiError(403, "Your account is Suspended");
-// 	}
-
-// 	const accessToken = jwtHelpers.generateToken(
-// 		{
-// 			id: userData.id,
-// 			email: userData.email,
-// 			role: userData.role,
-// 		},
-// 		config.jwt.jwt_secret as Secret,
-// 		config.jwt.expires_in as string
-// 	);
-
-// 	const refreshToken = jwtHelpers.generateToken(
-// 		{
-// 			id: userData.id,
-// 			email: userData.email,
-// 			role: userData.role,
-// 		},
-// 		config.jwt.refresh_token_secret as Secret,
-// 		config.jwt.expires_in as string
-// 	);
-
-// 	await prisma.user.update({
-// 		where: {
-// 			id: userData.id,
-// 		},
-// 		data: {
-// 			refreshToken,
-// 		},
-// 	});
-
-// 	return {
-// 		accessToken,
-// 		refreshToken,
-// 	};
-// };
-
 const changePassword = async (
     user: JwtPayload,
     payload: ChangePasswordInput,
@@ -329,7 +261,7 @@ const changePassword = async (
     return { message: "Password Changed successfully" };
 };
 
-const forgotPassword = async (payload: { email: string }) => {
+const forgotPassword = async (payload: ForgetPasswordInput) => {
     const userData = await prisma.user.findUnique({
         where: {
             email: payload.email,
@@ -344,6 +276,7 @@ const forgotPassword = async (payload: { email: string }) => {
         config.jwt.reset_token_secret as Secret,
         config.jwt.reset_token_expires_in as string,
     );
+    console.log(resetPassToken)
 
     const resetPassLink =
         config.url.reset_pass +
@@ -361,52 +294,7 @@ const forgotPassword = async (payload: { email: string }) => {
     };
 };
 
-const refreshToken = async (payload: { refreshToken: string }) => {
-    if (!payload.refreshToken) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, "refreshToken is required");
-    }
-
-    let decrypted;
-
-    try {
-        decrypted = jwtHelpers.verifyToken(
-            payload.refreshToken,
-            config.jwt.jwt_secret as string,
-        );
-    } catch (error) {
-        throw new ApiError(
-            StatusCodes.BAD_REQUEST,
-            "Refresh Token is Invalid or Expired",
-        );
-    }
-
-    const userData = await prisma.user.findUnique({
-        where: { id: decrypted.id },
-    });
-
-    if (!userData) {
-        throw new ApiError(StatusCodes.UNAUTHORIZED, "Unauthenticated Request");
-    }
-
-    const jwtPayload = {
-        id: userData.id,
-        role: userData.role,
-        email: userData.email,
-    };
-
-    const accessToken = jwtHelpers.generateToken(
-        jwtPayload,
-        config.jwt.jwt_secret as Secret,
-        config.jwt.jwt_secret_expires_in as string,
-    );
-
-    return {
-        data: { accessToken },
-        message: "Access Token generated",
-    };
-};
-
-const resetPassword = async (payload: { token: string; password: string }) => {
+const resetPassword = async (payload: ResetPasswordInput) => {
     let decrypted;
 
     try {
@@ -440,6 +328,51 @@ const resetPassword = async (payload: { token: string; password: string }) => {
         },
     });
     return { message: "Password Reset successful" };
+};
+
+const refreshToken = async (payload: { refreshToken: string }) => {
+    if (!payload.refreshToken) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "refreshToken is required");
+    }
+
+    let decrypted;
+
+    try {
+        decrypted = jwtHelpers.verifyToken(
+            payload.refreshToken,
+            config.jwt.refresh_token_secret as string,
+        );
+    } catch (error) {
+        throw new ApiError(
+            StatusCodes.BAD_REQUEST,
+            "Refresh Token is Invalid or Expired",
+        );
+    }
+
+    const userData = await prisma.user.findUnique({
+        where: { id: decrypted.id },
+    });
+
+    if (!userData) {
+        throw new ApiError(StatusCodes.UNAUTHORIZED, "Unauthenticated Request");
+    }
+
+    const jwtPayload = {
+        id: userData.id,
+        role: userData.role,
+        email: userData.email,
+    };
+
+    const accessToken = jwtHelpers.generateToken(
+        jwtPayload,
+        config.jwt.jwt_secret as Secret,
+        config.jwt.jwt_secret_expires_in as string,
+    );
+
+    return {
+        data: { accessToken },
+        message: "Access Token generated",
+    };
 };
 
 export const AuthServices = {
