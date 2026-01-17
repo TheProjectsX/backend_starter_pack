@@ -10,7 +10,7 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "cModule": "node scripts/generateModule.mjs",
         "postinstall": "npx prisma generate",
-        "check": "eslint src && npx prettier --write src"
+        "check": "eslint src && npx prettier --write src && npm run build && echo [✓] All checks passed!"
     },
     "keywords": [],
     "author": "TheProjectsX",
