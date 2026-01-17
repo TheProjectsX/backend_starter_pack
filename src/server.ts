@@ -1,6 +1,7 @@
 import { Server } from "http";
 import app from "./app";
 import config from "./config";
+import { getLocalIP } from "./utils/localIp";
 
 let server: Server;
 
@@ -8,7 +9,10 @@ let server: Server;
 function main() {
     try {
         server = app.listen(config.port, () => {
-            console.log(`Server is running on http://localhost:${config.port}`);
+            const ip = getLocalIP();
+            console.log(`\nServer is running on:
+    http://localhost:${config.port}
+    http://${ip}:${config.port}\n`);
         });
     } catch (error) {
         console.log(error);
@@ -19,7 +23,7 @@ function main() {
 main();
 
 process.on("unhandledRejection", (err) => {
-    console.log(`😈 unahandledRejection is detected , shutting down ...`, err);
+    console.log(`😈 unhandledRejection is detected , shutting down ...`, err);
     if (server) {
         server.close(() => {
             process.exit(1);

@@ -38,7 +38,6 @@ export const generateEmailVerifyTemplate = (link: string) => `
 </html>
 `;
 
-
 export const generateVerifyOTPTemplate = (otp: string) => `
 <!DOCTYPE html>
 <html lang="en">
@@ -78,7 +77,6 @@ export const generateVerifyOTPTemplate = (otp: string) => `
 </body>
 </html>
 `;
-
 
 export const generateForgetPasswordTemplate = (link: string) => `
 <!DOCTYPE html>
@@ -120,4 +118,3 @@ export const generateForgetPasswordTemplate = (link: string) => `
 </body>
 </html>
 `;
-

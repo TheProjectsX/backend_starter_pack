@@ -3,9 +3,9 @@ const template = ({
     camel,
     subdir = false,
 }) => `import { Router } from "express";
-import ${pascal}Controllers from "./${camel}.controller";
+import ${pascal}Controllers from "./${camel}.controllers";
 import auth from "${subdir ? "../../" : ""}../../middlewares/auth";
-import ${pascal}Validations from "./${camel}.validation";
+import ${pascal}Validations from "./${camel}.validations";
 
 const router = Router();
 

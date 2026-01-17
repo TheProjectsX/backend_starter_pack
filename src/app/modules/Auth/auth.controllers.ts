@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import { StatusCodes } from "http-status-codes";
-import { AuthServices } from "./auth.service";
+import { AuthServices } from "./auth.services";
 import config from "../../../config";
 
 const register = catchAsync(async (req: Request, res: Response) => {

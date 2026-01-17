@@ -2,8 +2,8 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { slugify } from "../utils/slugify";
-import { fileFilter } from "./fileFilter";
+import { slugify } from "../../utils/slugify";
+import { fileFilter } from "./filter";
 
 const uploadDir = path.join(process.cwd(), "uploads");
 
@@ -26,11 +26,11 @@ export const createStorage = (folder?: string) => {
             const uniqueSuffix = `${uuidv4()}-${Date.now()}`;
             const fileExtension = path.extname(file.originalname);
 
-            const slugifiedName = slugify(
+            const sluggedName = slugify(
                 path.basename(file.originalname, fileExtension),
             );
 
-            const fileName = `${slugifiedName}-${uniqueSuffix}${fileExtension}`;
+            const fileName = `${sluggedName}__SUF_${uniqueSuffix}${fileExtension}`;
 
             cb(null, fileName);
         },

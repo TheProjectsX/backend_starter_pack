@@ -8,7 +8,7 @@ import catchAsync from "${subdir ? "../../" : ""}../../../shared/catchAsync";
 import sendResponse from "${
     subdir ? "../../" : ""
 }../../../shared/sendResponse";
-import ${pascal}Services from "./${camel}.service";
+import ${pascal}Services from "./${camel}.services";
 
 
 export default {};`;

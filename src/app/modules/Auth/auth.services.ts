@@ -11,14 +11,14 @@ import { JwtPayload, Secret } from "jsonwebtoken";
 import {
     generateForgetPasswordTemplate,
     generateVerifyOTPTemplate,
-} from "./auth.template";
+} from "./auth.templates";
 import { StatusCodes } from "http-status-codes";
 import {
     ChangePasswordInput,
     ForgetPasswordInput,
     ResetPasswordInput,
     UserRegisterInput,
-} from "./auth.validation";
+} from "./auth.validations";
 import { generateOTP } from "./auth.utils";
 
 const register = async (payload: UserRegisterInput) => {
@@ -47,7 +47,7 @@ const register = async (payload: UserRegisterInput) => {
             profile: {
                 create: {
                     name,
-                    phone
+                    phone,
                 },
             },
         },
@@ -272,11 +272,11 @@ const forgotPassword = async (payload: ForgetPasswordInput) => {
     }
 
     const resetPassToken = jwtHelpers.generateToken(
-        { email: userData.email, role: userData.role },
+        { id: userData.id, email: userData.email, role: userData.role },
         config.jwt.reset_token_secret as Secret,
         config.jwt.reset_token_expires_in as string,
     );
-    console.log(resetPassToken)
+    console.log(resetPassToken);
 
     const resetPassLink =
         config.url.reset_pass +

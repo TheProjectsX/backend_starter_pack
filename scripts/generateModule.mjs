@@ -1,15 +1,15 @@
 import fs from "fs";
-import { getModulePaths } from "./utils/helpers.js";
-import routeTemplate from "./templates/route.template.js";
-import controllerTemplate from "./templates/controller.template.js";
-import serviceTemplate from "./templates/service.template.js";
-import validationsTemplate from "./templates/validation.template.js";
+import { getModulePaths } from "./utils/helpers.mjs";
+import routeTemplate from "./templates/routes.template.mjs";
+import controllerTemplate from "./templates/controllers.template.mjs";
+import serviceTemplate from "./templates/services.template.mjs";
+import validationsTemplate from "./templates/validations.template.mjs";
 
 let moduleName = process.argv[2];
 let baseName = process.argv[3];
 if (!moduleName) {
     console.error(
-        "❌ Please provide a module name. Example: npm run cModule Investor"
+        "❌ Please provide a module name. Example: npm run cModule Investor",
     );
     process.exit(1);
 }
@@ -23,19 +23,19 @@ if (!fs.existsSync(baseDir)) {
 
 const files = [
     {
-        name: `${camel}.route.ts`,
+        name: `${camel}.routes.ts`,
         content: routeTemplate({ pascal, camel, lower, subdir: !!baseName }),
     },
     {
-        name: `${camel}.controller.ts`,
+        name: `${camel}.controllers.ts`,
         content: controllerTemplate({ pascal, camel, subdir: !!baseName }),
     },
     {
-        name: `${camel}.service.ts`,
+        name: `${camel}.services.ts`,
         content: serviceTemplate({ pascal, camel, lower, subdir: !!baseName }),
     },
     {
-        name: `${camel}.validation.ts`,
+        name: `${camel}.validations.ts`,
         content: validationsTemplate({
             pascal,
             camel,

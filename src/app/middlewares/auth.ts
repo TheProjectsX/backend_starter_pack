@@ -9,6 +9,12 @@ import { jwtHelpers } from "../../helpers/jwtHelpers";
 import prisma from "../../shared/prisma";
 import { UserRole } from "@prisma/client";
 
+export type UserJwtPayload = {
+    id: string;
+    email: string;
+    role: UserRole;
+};
+
 const auth = (...roles: UserRole[]) => {
     return async (
         req: Request & { user?: JwtPayload },
@@ -38,8 +44,8 @@ const auth = (...roles: UserRole[]) => {
 
             if (!user) {
                 throw new ApiError(
-                    StatusCodes.NOT_FOUND,
-                    "This user is not found !",
+                    StatusCodes.UNAUTHORIZED,
+                    "You are not authorized!",
                 );
             }
 
@@ -47,7 +53,11 @@ const auth = (...roles: UserRole[]) => {
                 throw new ApiError(StatusCodes.FORBIDDEN, "Forbidden!");
             }
 
-            req.user = verifiedUser;
+            req.user = {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+            };
 
             next();
         } catch (err) {

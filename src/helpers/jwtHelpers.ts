@@ -1,7 +1,8 @@
-import jwt, { JwtPayload, Secret, SignOptions } from "jsonwebtoken";
+import jwt, { Secret, SignOptions } from "jsonwebtoken";
+import { UserJwtPayload } from "../app/middlewares/auth";
 
 const generateToken = (
-    payload: Record<string, unknown>,
+    payload: UserJwtPayload,
     secret: Secret,
     expiresIn: string,
 ): string => {
@@ -14,7 +15,7 @@ const generateToken = (
 };
 
 const verifyToken = (token: string, secret: Secret) => {
-    return jwt.verify(token, secret) as JwtPayload;
+    return jwt.verify(token, secret) as UserJwtPayload;
 };
 
 export const jwtHelpers = {
