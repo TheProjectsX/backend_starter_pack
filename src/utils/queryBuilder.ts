@@ -137,6 +137,7 @@ class QueryBuilder<
     filter({
         exacts = [],
         booleans = [],
+        exclude = [],
     }: {
         exacts?: (
             | EnumKeys<Awaited<ReturnType<Model["findMany"]>>[0]>
@@ -146,6 +147,7 @@ class QueryBuilder<
             | BooleanKeys<Awaited<ReturnType<Model["findMany"]>>[0]>
             | (string & {})
         )[];
+        exclude?: string[];
     } = {}) {
         const queryObj = { ...this.query };
         const excludeFields = [
@@ -156,6 +158,7 @@ class QueryBuilder<
             "fields",
             "populate",
             "dateRange",
+            ...exclude,
         ];
         excludeFields.forEach((field) => delete queryObj[field]);
 
@@ -553,20 +556,20 @@ class QueryBuilder<
         page: number;
         limit: number;
         total: any;
-        totalPages: number;
+        totalPage: number;
     }> {
         const query = this.cleanQuery(this.prismaQuery);
 
         const total = await this.model.count({ where: query.where });
         const page = Number(this.query.page) || 1;
         const limit = Number(this.query.limit) || 10;
-        const totalPages = Math.ceil(total / limit);
+        const totalPage = Math.ceil(total / limit);
 
         return {
             page,
             limit,
             total,
-            totalPages,
+            totalPage,
         };
     }
 
