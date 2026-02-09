@@ -2,9 +2,10 @@ generator client {
     provider = "prisma-client-js"
 }
 
-generator dbml {
-    provider = "prisma-dbml-generator"
-}
+// ! [NOTE]: Use this to generate DBML (DataBase Markup Language) - But the plugin is not installed as the plugin has vulnerabilities. Run to install: `npm i prisma-dbml-generator` . Uninstall after using
+// generator dbml {
+//     provider = "prisma-dbml-generator"
+// }
 
 datasource db {
     provider = "mongodb"
